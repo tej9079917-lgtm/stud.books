@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>EchoVault — Private. Ephemeral. Honest.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root{
+      --glass:rgba(255,255,255,.10);
+      --border:rgba(255,255,255,.18);
+      --blur:blur(18px);
+      --accent:#7c7cff;
+      --danger:#ff4d4f;
+      --bg:#020617;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;min-height:100vh;
+      font-family:Inter,system-ui,sans-serif;
+      background:radial-gradient(circle at top,#111827,#020617 65%);
+      color:#e5e7eb;
+      display:flex;align-items:center;justify-content:center;
+    }
+    .app{width:100%;max-width:430px;padding:12px}
+    .glass{
+      background:var(--glass);
+      backdrop-filter:var(--blur);
+      border:1px solid var(--border);
+      border-radius:22px;
+      padding:22px;
+      box-shadow:0 30px 80px rgba(0,0,0,.6);
+      animation:fade .4s ease;
+    }
+    @keyframes fade{from{opacity:0;transform:translateY(10px)}}
+    h1,h2{text-align:center;margin:8px 0}
+    h1{font-size:26px}
+    h2{font-size:20px}
+    p{font-size:14px;color:#cbd5f5;text-align:center}
+    input,select,textarea,button{
+      width:100%;padding:12px;margin:8px 0;
+      border-radius:14px;border:1px solid var(--border);
+      background:rgba(0,0,0,.35);color:white;font-size:15px
+    }
+    textarea{resize:none}
+    button{background:linear-gradient(135deg,var(--accent),#4f46e5);border:none;font-weight:600;cursor:pointer}
+    button.alt{background:rgba(255,255,255,.12)}
+    button.danger{background:linear-gradient(135deg,var(--danger),#b91c1c)}
+    .hidden{display:none}
+    .note{font-size:13px;text-align:left;background:rgba(0,0,0,.35);padding:12px;border-radius:14px}
+    .note li{margin:6px 0}
+    .chat-box{height:320px;overflow-y:auto;padding:10px;background:rgba(0,0,0,.3);border-radius:16px}
+    .msg{margin:10px 0;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.12)}
+    .me{background:linear-gradient(135deg,#6366f1,#2563eb)}
+    .meta{font-size:11px;color:#c7d2fe;margin-top:4px}
+    .actions{display:flex;gap:10px;font-size:18px;margin-top:6px}
+    footer{text-align:center;font-size:12px;color:#94a3b8;margin-top:12px}
+  </style>
+</head>
+<body>
+<div class="app">
+
+<!-- LOGIN -->
+<div class="glass" id="login">
+  <h1>🔮 EchoVault</h1>
+  <p>Messages fade. Privacy stays.</p>
+  <div class="note">
+    <ul>
+      <li>⏳ Messages delete after 24 hours</li>
+      <li>💤 Inactive accounts auto-delete in 7 days</li>
+      <li>🔐 Daily login required (no password reset)</li>
+      <li>⚠️ Forgotten password = lost account</li>
+      <li>🤝 Communicate responsibly & safely</li>
+    </ul>
+  </div>
+  <input id="logUser" placeholder="Username or User ID" />
+  <input id="logPass" type="password" placeholder="Password" />
+  <button onclick="loginUser()">Unlock Vault</button>
+  <button class="alt" onclick="showSignup()">Create New Vault</button>
+</div>
+
+<!-- SIGNUP -->
+<div class="glass hidden" id="signup">
+  <h2>Create Vault</h2>
+  <input id="regUser" placeholder="Username" />
+  <input id="regPass" type="password" placeholder="Password" />
+  <button onclick="registerUser()">Generate Vault</button>
+  <button class="alt" onclick="backToLogin()">Back</button>
+</div>
+
+<!-- PROFILE -->
+<div class="glass hidden" id="profile">
+  <h2>Identity (Optional)</h2>
+  <input id="pname" placeholder="Name" />
+  <input id="page" placeholder="Age" />
+  <select id="pgender"><option value="">Gender</option><option>Male</option><option>Female</option><option>Other</option></select>
+  <input id="plocation" placeholder="Location" />
+  <textarea id="pbio" placeholder="Bio"></textarea>
+  <input id="pphoto" placeholder="Profile photo URL" />
+  <button onclick="saveProfile()">Enter EchoVault</button>
+</div>
+
+<!-- CHAT -->
+<div class="glass hidden" id="chat">
+  <h2 id="welcome"></h2>
+  <input id="search" placeholder="Send to User ID (EV-XXXXXX)" />
+  <div class="chat-box" id="chatBox"></div>
+  <input id="message" placeholder="Type something ephemeral…" />
+  <button onclick="sendMessage(false)">Send ⏳</button>
+  <button class="alt" onclick="sendMessage(true)">🔥 Burn After Read</button>
+  <button class="danger" onclick="logout()">Exit</button>
+</div>
+
+<footer>Hybrid Glass UI • GitHub-ready • Zero servers</footer>
+</div>
+
+<script>
+/**************** CONFIG ****************/
+const DAY = 86400000;
+const MAX_REPORTS = 5;
+
+/**************** DATABASE (LOCAL FALLBACK) ****************/
+// ===== GitHub Gist Sync Config =====
+// 1. Create a PRIVATE Gist with a file named echovault.json
+// 2. Put initial content: {"users":{},"messages":[]}
+// 3. Create a GitHub Personal Access Token (scope: gist)
+// 4. Paste values below
+const GIST_ID = "PASTE_YOUR_GIST_ID_HERE";
+const GITHUB_TOKEN = "PASTE_YOUR_GITHUB_TOKEN_HERE";
+
+let db = JSON.parse(localStorage.getItem('echovault-db') || '{"users":{},"messages":[]}');
+let currentUser = null;
+
+async function saveDB(){
+  localStorage.setItem('echovault-db', JSON.stringify(db));
+  if(!GIST_ID || !GITHUB_TOKEN || GIST_ID.includes('PASTE')) return;
+  try{
+    await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      method:'PATCH',
+      headers:{
+        'Authorization':`token ${GITHUB_TOKEN}`,
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        files:{ 'echovault.json':{ content: JSON.stringify(db,null,2) } }
+      })
+    });
+  }catch(e){ console.warn('Gist sync failed',e); }
+}
+
+async function loadDB(){
+  const local = localStorage.getItem('echovault-db');
+  if(local) db = JSON.parse(local);
+  if(!GIST_ID || !GITHUB_TOKEN || GIST_ID.includes('PASTE')) return;
+  try{
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`,{
+      headers:{ 'Authorization':`token ${GITHUB_TOKEN}` }
+    });
+    const gist = await res.json();
+    if(gist.files && gist.files['echovault.json']){
+      db = JSON.parse(gist.files['echovault.json'].content);
+      localStorage.setItem('echovault-db', JSON.stringify(db));
+    }
+  }catch(e){ console.warn('Gist load failed',e); }
+}
+
+// Auto-pull on load
+loadDB();
+
+/**************** UTILITIES ****************/
+function uid(){ return 'EV-' + Math.random().toString(36).substr(2,6).toUpperCase(); }
+function hash(s){ return btoa(unescape(encodeURIComponent(s))); }
+function now(){ return Date.now(); }
+
+/**************** RULE ENGINE ****************/
+function enforceRules(){
+  const t = now();
+  for(const id in db.users){
+    if(t - db.users[id].lastActive > 7*DAY){
+      delete db.users[id];
+      db.messages = db.messages.filter(m => m.from !== id && m.to !== id);
+    }
+  }
+  db.messages = db.messages.filter(m => t - m.time < DAY);
+  saveDB();
+}
+
+/**************** AUTH ****************/
+function showSignup(){ login.classList.add('hidden'); signup.classList.remove('hidden'); }
+function backToLogin(){ signup.classList.add('hidden'); login.classList.remove('hidden'); }
+
+function registerUser(){
+  const u = regUser.value.trim();
+  const p = regPass.value;
+  if(!u || !p) return alert('Username and password required');
+  for(const id in db.users){ if(db.users[id].username === u) return alert('Username exists'); }
+  const id = uid();
+  db.users[id] = { userId:id, username:u, pass:hash(p), profile:null, reports:0, lastActive:now() };
+  saveDB(); alert('Vault created. Login again.'); backToLogin();
+}
+
+function loginUser(){
+  enforceRules();
+  const u = logUser.value.trim();
+  const p = hash(logPass.value);
+  for(const id in db.users){
+    const x = db.users[id];
+    if((x.username === u || x.userId === u) && x.pass === p){
+      currentUser = id; x.lastActive = now(); saveDB();
+      login.classList.add('hidden');
+      x.profile ? openChat() : profile.classList.remove('hidden');
+      return;
+    }
+  }
+  alert('Access denied');
+}
+
+function logout(){ location.reload(); }
+
+/**************** PROFILE ****************/
+function saveProfile(){
+  db.users[currentUser].profile = {
+    name:pname.value, age:page.value, gender:pgender.value,
+    location:plocation.value, bio:pbio.value, photo:pphoto.value
+  };
+  db.users[currentUser].lastActive = now(); saveDB();
+  profile.classList.add('hidden'); openChat();
+}
+
+/**************** CHAT ****************/
+function openChat(){
+  chat.classList.remove('hidden');
+  welcome.innerText = 'Welcome ' + (db.users[currentUser].profile?.name || db.users[currentUser].username);
+  renderChat();
+}
+
+function sendMessage(burn){
+  const to = search.value.trim();
+  const text = message.value.trim();
+  if(!db.users[to] || !text) return alert('Invalid User ID or message');
+  db.messages.push({ id:uid(), from:currentUser, to, text, time:now(), burn, viewed:false, reactions:[] });
+  db.users[currentUser].lastActive = now(); message.value=''; saveDB(); renderChat();
+}
+
+function renderChat(){
+  enforceRules(); chatBox.innerHTML='';
+  db.messages.forEach(m=>{
+    if(m.from!==currentUser && m.to!==currentUser) return;
+    if(m.burn && m.viewed) return;
+    const d=document.createElement('div'); d.className='msg '+(m.from===currentUser?'me':'');
+    const hrs=Math.ceil((DAY-(now()-m.time))/3600000);
+    d.innerHTML=`${m.text}<div class='meta'>${m.burn?'🔥 burn':'⏳ expires'} • ${hrs}h</div>`;
+    if(m.burn && !m.viewed) d.onclick=()=>{m.viewed=true;saveDB();renderChat();};
+    chatBox.appendChild(d);
+  });
+  chatBox.scrollTop=chatBox.scrollHeight;
+}
+</script>
+</body>
+</html>
