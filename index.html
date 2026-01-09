@@ -1,259 +1,517 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>EchoVault — Private. Ephemeral. Honest.</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    :root{
-      --glass:rgba(255,255,255,.10);
-      --border:rgba(255,255,255,.18);
-      --blur:blur(18px);
-      --accent:#7c7cff;
-      --danger:#ff4d4f;
-      --bg:#020617;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;min-height:100vh;
-      font-family:Inter,system-ui,sans-serif;
-      background:radial-gradient(circle at top,#111827,#020617 65%);
-      color:#e5e7eb;
-      display:flex;align-items:center;justify-content:center;
-    }
-    .app{width:100%;max-width:430px;padding:12px}
-    .glass{
-      background:var(--glass);
-      backdrop-filter:var(--blur);
-      border:1px solid var(--border);
-      border-radius:22px;
-      padding:22px;
-      box-shadow:0 30px 80px rgba(0,0,0,.6);
-      animation:fade .4s ease;
-    }
-    @keyframes fade{from{opacity:0;transform:translateY(10px)}}
-    h1,h2{text-align:center;margin:8px 0}
-    h1{font-size:26px}
-    h2{font-size:20px}
-    p{font-size:14px;color:#cbd5f5;text-align:center}
-    input,select,textarea,button{
-      width:100%;padding:12px;margin:8px 0;
-      border-radius:14px;border:1px solid var(--border);
-      background:rgba(0,0,0,.35);color:white;font-size:15px
-    }
-    textarea{resize:none}
-    button{background:linear-gradient(135deg,var(--accent),#4f46e5);border:none;font-weight:600;cursor:pointer}
-    button.alt{background:rgba(255,255,255,.12)}
-    button.danger{background:linear-gradient(135deg,var(--danger),#b91c1c)}
-    .hidden{display:none}
-    .note{font-size:13px;text-align:left;background:rgba(0,0,0,.35);padding:12px;border-radius:14px}
-    .note li{margin:6px 0}
-    .chat-box{height:320px;overflow-y:auto;padding:10px;background:rgba(0,0,0,.3);border-radius:16px}
-    .msg{margin:10px 0;padding:12px 14px;border-radius:18px;background:rgba(255,255,255,.12)}
-    .me{background:linear-gradient(135deg,#6366f1,#2563eb)}
-    .meta{font-size:11px;color:#c7d2fe;margin-top:4px}
-    .actions{display:flex;gap:10px;font-size:18px;margin-top:6px}
-    footer{text-align:center;font-size:12px;color:#94a3b8;margin-top:12px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexusLib | Ultimate Portal</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* --- THEME VARIABLES --- */
+        :root {
+            --bg-body: #050505;
+            --bg-card: #141423;
+            --bg-card-glass: rgba(20, 20, 35, 0.85);
+            --text-main: #ffffff;
+            --text-muted: #a1a1aa;
+            --primary: #8b5cf6;
+            --primary-glow: #a78bfa;
+            --glass-border: rgba(139, 92, 246, 0.3);
+            --input-bg: rgba(255,255,255,0.07);
+            --new-badge: #00ff9d;
+            --verified: #00e1ff;
+            --heart: #ff0055;
+            --admin-color: #f59e0b;
+            --shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        [data-theme="light"] {
+            --bg-body: #eef2f6;
+            --bg-card: #ffffff;
+            --bg-card-glass: rgba(255, 255, 255, 0.9);
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --primary: #6366f1;
+            --primary-glow: #818cf8;
+            --glass-border: rgba(99, 102, 241, 0.2);
+            --input-bg: rgba(0,0,0,0.05);
+            --shadow: 0 10px 40px rgba(0,0,0,0.1);
+            --new-badge: #059669;
+            --verified: #0284c7;
+        }
+
+        /* Global Reset */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        html, body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(56, 189, 248, 0.15) 0px, transparent 50%);
+        }
+
+        /* --- SCROLLBAR --- */
+        ::-webkit-scrollbar { width: 10px; }
+        ::-webkit-scrollbar-track { background: var(--bg-body); }
+        ::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* --- ANIMATIONS --- */
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        @keyframes pulse-gold { 0% { box-shadow: 0 0 0 rgba(245, 158, 11, 0.4); } 70% { box-shadow: 0 0 20px rgba(245, 158, 11, 0); } 100% { box-shadow: 0 0 0 rgba(245, 158, 11, 0); } }
+        @keyframes spin-crazy { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
+        @keyframes popIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+        /* --- FROZEN GLASSY NAVIGATION BAR --- */
+        nav { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 0 5%; /* Vertical padding handled by height */
+            height: 80px;
+            
+            /* FREEZE LOGIC */
+            position: fixed; 
+            top: 0; 
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            
+            /* GLASS EFFECT */
+            background: rgba(5, 5, 5, 0.4); 
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="light"] nav { 
+            background: rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .logo { 
+            font-size: 1.8rem; font-weight: 800; cursor: pointer; 
+            background: linear-gradient(135deg, #fff 0%, var(--primary) 100%); 
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; 
+            white-space: nowrap; letter-spacing: -1px;
+            filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.3));
+        }
+        [data-theme="light"] .logo { background: linear-gradient(135deg, var(--primary) 0%, #1f2937 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .nav-actions { display: flex; gap: 0.8rem; align-items: center; }
+
+        .btn { 
+            padding: 0.5rem 1.2rem; border-radius: 15px; 
+            border: 1px solid var(--glass-border); cursor: pointer; 
+            font-weight: 600; background: var(--input-bg); 
+            color: var(--text-main); display: flex; align-items: center; gap: 8px; 
+            height: 45px; justify-content: center; position: relative; overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+        .btn:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn-primary { background: var(--primary); border: none; color: white; }
+        .btn-primary:hover { background: var(--primary-glow); }
+        .theme-btn.spin i { animation: spin-crazy 0.8s ease-in-out; }
+
+        .user-profile { 
+            display: flex; align-items: center; gap: 10px; padding: 0 1rem; height: 45px;
+            background: var(--input-bg); border-radius: 50px; 
+            border: 1px solid var(--glass-border); color: var(--text-main); white-space: nowrap;
+        }
+
+        /* --- INPUTS & SELECTS --- */
+        input, select { 
+            width: 100%; padding: 1rem; 
+            background: var(--input-bg) !important; 
+            border: 1px solid var(--glass-border); 
+            border-radius: 12px; color: var(--text-main) !important; 
+            outline: none; font-size: 1rem; 
+        }
+        option { background-color: #141423; color: white; }
+        [data-theme="light"] option { background-color: white; color: black; }
+
+        input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, input:-webkit-autofill:active {
+            -webkit-box-shadow: 0 0 0 30px var(--bg-card) inset !important;
+            -webkit-text-fill-color: var(--text-main) !important;
+            transition: background-color 5000s ease-in-out 0s;
+        }
+
+        /* --- AUTH SCREEN --- */
+        #auth-section { display: flex; justify-content: center; align-items: center; height: 100vh; width: 100%; position: fixed; top: 0; left: 0; background: var(--bg-body); z-index: 2000; backdrop-filter: blur(10px); overflow-y: auto; }
+        .auth-card { 
+            background: var(--bg-card-glass); backdrop-filter: blur(25px); 
+            border: 1px solid var(--glass-border); padding: 3rem; border-radius: 24px; 
+            width: 90%; max-width: 450px; text-align: center; 
+            box-shadow: var(--shadow); position: relative; 
+            animation: float 6s ease-in-out infinite;
+        }
+        .admin-toggle-btn { 
+            position: absolute; top: 20px; right: 20px; 
+            background: rgba(245, 158, 11, 0.1); border: 1px solid var(--admin-color); 
+            color: var(--admin-color); font-size: 1.2rem; cursor: pointer; 
+            width: 40px; height: 40px; border-radius: 50%;
+            display: flex; justify-content: center; align-items: center; transition: 0.3s;
+        } 
+        .admin-toggle-btn:hover { background: var(--admin-color); color: white; box-shadow: 0 0 15px var(--admin-color); }
+        .admin-toggle-btn.active { background: var(--admin-color); color: white; animation: pulse-gold 2s infinite; }
+        
+        .auth-logo { font-size: 2.5rem; margin-bottom: 0.5rem; background: linear-gradient(to right, #c4b5fd, var(--primary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .auth-tabs { display: flex; margin-bottom: 2rem; background: var(--input-bg); padding: 5px; border-radius: 15px; }
+        .auth-tab { flex: 1; padding: 0.8rem; cursor: pointer; color: var(--text-muted); border-radius: 10px; font-weight: 600; } 
+        .auth-tab.active { color: white; background: var(--primary); }
+        .auth-form { display: none; text-align: left; } .auth-form.active { display: block; animation: popIn 0.5s ease forwards; }
+        .input-group { margin-bottom: 1.2rem; } .input-group label { display: block; color: var(--text-muted); margin-bottom: 0.5rem; font-size: 0.9rem; margin-left: 5px; }
+        .auth-btn { width: 100%; padding: 1rem; background: var(--primary); color: white; border: none; border-radius: 15px; font-weight: bold; cursor: pointer; font-size: 1rem; margin-top: 10px; box-shadow: 0 5px 15px rgba(139, 92, 246, 0.3); }
+        .guest-btn { width: 100%; padding: 0.8rem; margin-top: 1rem; background: transparent; color: var(--text-muted); border: 1px solid var(--glass-border); border-radius: 15px; cursor: pointer; }
+
+        /* --- APP CONTENT --- */
+        #app-section { 
+            display: none; 
+            flex-direction: column; 
+            min-height: 100vh; 
+            padding-top: 80px; /* PADDING ADDED TO COMPENSATE FIXED NAV */
+        }
+        
+        .hero { text-align: center; padding: 4rem 1rem 2rem; }
+        .hero h1 { font-size: 3rem; margin-bottom: 1rem; background: linear-gradient(to right, #fff, var(--text-muted)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        [data-theme="light"] .hero h1 { background: linear-gradient(to right, #1f2937, #6b7280); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .search-container { max-width: 700px; margin: 0 auto 2rem; position: relative; transition: 0.3s; } 
+        .search-container:hover { transform: scale(1.02); }
+        .search-container input { padding-left: 3.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.2); } 
+        .search-icon { position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--primary); font-size: 1.2rem; }
+        
+        /* FILTERS */
+        .filters { display: flex; justify-content: center; gap: 12px; margin-bottom: 2rem; flex-wrap: wrap; align-items: center; } 
+        select { 
+            width: auto; min-width: auto; 
+            padding: 0.5rem 1rem; 
+            border-radius: 50px; cursor: pointer; 
+            font-size: 0.9rem; font-weight: 600;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        select:hover { transform: translateY(-3px) scale(1.05); border-color: var(--primary); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        
+        .material-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2.5rem; padding: 1rem 5% 5rem; flex: 1; }
+        
+        /* CARD STYLES */
+        .card { 
+            background: var(--bg-card-glass); border: 1px solid var(--glass-border); 
+            border-radius: 24px; padding: 1.5rem; position: relative; 
+            backdrop-filter: blur(15px); display: flex; flex-direction: column; 
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2); 
+            opacity: 1; transform: scale(1);
+            animation: popIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
+        }
+        .card:hover { 
+            transform: scale(1.05) translateY(-10px) !important; 
+            border-color: var(--primary); 
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), 0 0 20px var(--glass-border); 
+            z-index: 50; 
+        }
+
+        .admin-delete-btn {
+            position: absolute; top: -12px; left: -12px;
+            width: 40px; height: 40px; background: #ef4444; color: white;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(239, 68, 68, 0.5);
+            z-index: 20; border: 3px solid var(--bg-body); transition: 0.3s;
+        }
+        .admin-delete-btn:hover { transform: scale(1.2) rotate(15deg); background: #ff0000; }
+
+        .card-header { display: flex; justify-content: space-between; margin-bottom: 1rem; align-items: flex-start; }
+        .new-badge { font-size: 0.65rem; color: #000; background: var(--new-badge); padding: 0.2rem 0.6rem; border-radius: 50px; font-weight: bold; }
+        .save-btn { background: var(--input-bg); border: none; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; color: var(--text-muted); transition: 0.2s; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; } 
+        .save-btn.active { color: var(--heart); background: rgba(255, 0, 85, 0.1); transform: scale(1.1); }
+        
+        .tag-row { display: flex; gap: 8px; margin-bottom: 1rem; flex-wrap: wrap; }
+        .tag { font-size: 0.75rem; background: rgba(139, 92, 246, 0.1); color: var(--primary-glow); padding: 0.3rem 0.8rem; border-radius: 50px; border: 1px solid var(--glass-border); }
+        
+        h3 { font-size: 1.4rem; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 700; line-height: 1.3; }
+        .meta { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; display: flex; flex-direction: column; gap: 8px; }
+        .meta i { color: var(--primary); width: 20px; text-align: center; }
+        
+        .action-row { display: flex; gap: 10px; margin-top: auto; }
+        .download-btn { flex: 2; text-align: center; background: linear-gradient(90deg, var(--primary), #6366f1); border: none; color: white; padding: 0.8rem; border-radius: 12px; text-decoration: none; font-weight: 600; box-shadow: 0 5px 15px rgba(99, 102, 241, 0.3); } 
+        .download-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(99, 102, 241, 0.5); }
+        .discuss-btn { flex: 1; text-align: center; border: 1px solid var(--glass-border); color: var(--text-muted); padding: 0.8rem; border-radius: 12px; cursor: pointer; font-size: 1.1rem; display: flex; justify-content: center; align-items: center; } 
+        .discuss-btn:hover { background: var(--input-bg); color: var(--primary-glow); border-color: var(--primary); transform: translateY(-2px); }
+
+        /* MODALS */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 2500; backdrop-filter: blur(8px); animation: popIn 0.3s ease; }
+        .modal-content { background: var(--bg-card-glass); padding: 2.5rem; border-radius: 24px; width: 95%; max-width: 600px; border: 1px solid var(--glass-border); position: relative; max-height: 85vh; overflow-y: auto; color: var(--text-main); box-shadow: 0 0 50px rgba(0,0,0,0.5); }
+        .close { position: absolute; top: 20px; right: 25px; font-size: 1.8rem; cursor: pointer; color: var(--text-muted); transition: 0.3s; } .close:hover { color: var(--text-main); transform: rotate(90deg); }
+
+        .comment-item { background: var(--input-bg); padding: 12px; border-radius: 12px; margin-bottom: 10px; font-size: 0.95rem; border-left: 3px solid var(--primary); }
+        .star-rating { color: #f59e0b; font-size: 1.5rem; margin-bottom: 10px; display: flex; gap: 5px; cursor: pointer; }
+        .contact-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 10px; background: var(--input-bg); border-radius: 8px; }
+
+        @media (max-width: 768px) {
+            nav { padding: 0.8rem 1rem; } .nav-actions { gap: 0.5rem; }
+            .btn-text, .user-name { display: none; }
+            .btn { padding: 0; width: 40px; border-radius: 50%; }
+            .user-profile { padding: 0; width: 40px; border-radius: 50%; justify-content: center; border:none; background: transparent;}
+            .hero h1 { font-size: 2rem; }
+            .material-grid { grid-template-columns: 1fr; padding: 1rem; }
+            .filters { gap: 8px; } select { font-size: 0.8rem; padding: 0.4rem 0.8rem; }
+        }
+    </style>
 </head>
 <body>
-<div class="app">
 
-<!-- LOGIN -->
-<div class="glass" id="login">
-  <h1>🔮 EchoVault</h1>
-  <p>Messages fade. Privacy stays.</p>
-  <div class="note">
-    <ul>
-      <li>⏳ Messages delete after 24 hours</li>
-      <li>💤 Inactive accounts auto-delete in 7 days</li>
-      <li>🔐 Daily login required (no password reset)</li>
-      <li>⚠️ Forgotten password = lost account</li>
-      <li>🤝 Communicate responsibly & safely</li>
-    </ul>
-  </div>
-  <input id="logUser" placeholder="Username or User ID" />
-  <input id="logPass" type="password" placeholder="Password" />
-  <button onclick="loginUser()">Unlock Vault</button>
-  <button class="alt" onclick="showSignup()">Create New Vault</button>
-</div>
+    <div id="auth-section">
+        <div class="auth-card">
+            <button class="admin-toggle-btn" onclick="toggleAdminMode()" title="Toggle Admin Mode"><i class="fas fa-shield-alt"></i></button>
+            <div class="auth-logo"><i class="fas fa-book-open"></i> NexusLib</div>
+            <p style="color:var(--text-muted); margin-bottom:2rem;" id="loginSubtitle">Academic Resource Portal</p>
+            <div class="auth-tabs" id="authTabs">
+                <div class="auth-tab active" onclick="switchTab('login')">Login</div>
+                <div class="auth-tab" onclick="switchTab('register')">Register</div>
+            </div>
+            <form id="loginForm" class="auth-form active" onsubmit="handleLogin(event)">
+                <div class="error-msg" id="loginError" style="color:#ef4444; display:none; margin-bottom:10px;">Invalid Credentials</div>
+                <div class="input-group"><label>ID / Email</label><input type="text" id="loginEmail" required placeholder="Enter ID or Email"></div>
+                <div class="input-group"><label>Password</label><input type="password" id="loginPass" required placeholder="Enter Password"></div>
+                <button type="submit" class="auth-btn" id="loginSubmitBtn">Access Dashboard</button>
+                <div id="guestSection" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--glass-border);">
+                    <button type="button" class="guest-btn" onclick="loginAsGuest()">Continue as Guest</button>
+                </div>
+            </form>
+            <form id="registerForm" class="auth-form" onsubmit="handleRegister(event)">
+                <div class="input-group"><label>Full Name</label><input type="text" id="regName" required placeholder="John Doe"></div>
+                <div class="input-group"><label>Email Address</label><input type="email" id="regEmail" required placeholder="student@college.edu"></div>
+                <div class="input-group"><label>Role</label><select id="regRole"><option value="Student">Student</option><option value="Teacher">Teacher</option></select></div>
+                <div class="input-group"><label>Create Password</label><input type="password" id="regPass" required placeholder="Create a strong password"></div>
+                <button type="submit" class="auth-btn">Create Account</button>
+            </form>
+        </div>
+    </div>
 
-<!-- SIGNUP -->
-<div class="glass hidden" id="signup">
-  <h2>Create Vault</h2>
-  <input id="regUser" placeholder="Username" />
-  <input id="regPass" type="password" placeholder="Password" />
-  <button onclick="registerUser()">Generate Vault</button>
-  <button class="alt" onclick="backToLogin()">Back</button>
-</div>
+    <div id="app-section">
+        <nav>
+            <div class="logo" onclick="resetFilters()"><i class="fas fa-book-open"></i> NexusLib</div>
+            <div class="nav-actions">
+                <button class="btn theme-btn" onclick="toggleTheme()" title="Theme"><i class="fas fa-sun" id="themeIcon"></i></button>
+                <button class="btn" id="libBtn" onclick="showLibrary()"><i class="fas fa-heart"></i> <span class="btn-text">Library</span></button>
+                <button class="btn btn-primary" id="uploadBtn" onclick="openModal('uploadModal')"><i class="fas fa-cloud-upload-alt"></i> <span class="btn-text">Upload</span></button>
+                <button class="btn btn-primary" id="adminBtn" style="display:none; background-color: var(--admin-color); border-color:var(--admin-color);" onclick="openAdminPanel()"><i class="fas fa-shield-alt"></i> <span class="btn-text">Admin Panel</span></button>
+                <div class="user-profile"><i class="fas fa-user-circle"></i> <span class="user-name" id="displayUserName">Guest</span></div>
+                <button class="btn" style="border-color: #ef4444; color: #ef4444;" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </nav>
 
-<!-- PROFILE -->
-<div class="glass hidden" id="profile">
-  <h2>Identity (Optional)</h2>
-  <input id="pname" placeholder="Name" />
-  <input id="page" placeholder="Age" />
-  <select id="pgender"><option value="">Gender</option><option>Male</option><option>Female</option><option>Other</option></select>
-  <input id="plocation" placeholder="Location" />
-  <textarea id="pbio" placeholder="Bio"></textarea>
-  <input id="pphoto" placeholder="Profile photo URL" />
-  <button onclick="saveProfile()">Enter EchoVault</button>
-</div>
+        <section class="hero">
+            <h1>Academic Resource Hub</h1>
+            <div class="search-container"><i class="fas fa-search search-icon"></i><input type="text" id="searchInput" placeholder="Search title, subject, or author..." onkeyup="filterMaterials()"></div>
+        </section>
 
-<!-- CHAT -->
-<div class="glass hidden" id="chat">
-  <h2 id="welcome"></h2>
-  <input id="search" placeholder="Send to User ID (EV-XXXXXX)" />
-  <div class="chat-box" id="chatBox"></div>
-  <input id="message" placeholder="Type something ephemeral…" />
-  <button onclick="sendMessage(false)">Send ⏳</button>
-  <button class="alt" onclick="sendMessage(true)">🔥 Burn After Read</button>
-  <button class="danger" onclick="logout()">Exit</button>
-</div>
+        <div class="filters" id="filterSection">
+            <select id="roleFilter" onchange="filterMaterials()"><option value="all">Role: All</option><option value="Student">Student</option><option value="Teacher">Teacher</option></select>
+            <select id="streamFilter" onchange="filterMaterials()">
+                <option value="all">Stream: All</option><option value="B.Tech">B.Tech</option><option value="Degree">Degree</option>
+                <option value="MBA">MBA</option><option value="MCA">MCA</option><option value="Medical">Medical</option><option value="Other">Other</option>
+            </select>
+            <select id="yearFilter" onchange="filterMaterials()">
+                <option value="all">Year: All</option><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option>
+            </select>
+        </div>
 
-<footer>Hybrid Glass UI • GitHub-ready • Zero servers</footer>
-</div>
+        <div class="material-grid" id="grid"></div>
+        <footer style="text-align:center; padding:2rem; color:var(--text-muted);"><p>&copy; 2026 NexusLib. All rights reserved.</p></footer>
+    </div>
 
-<script>
-/**************** CONFIG ****************/
-const DAY = 86400000;
-const MAX_REPORTS = 5;
+    <div class="modal" id="uploadModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('uploadModal')">&times;</span>
+            <h2 style="margin-bottom:1.5rem;">Upload Material</h2>
+            <form onsubmit="handleUpload(event)">
+                <div class="input-group"><label>Stream</label><select id="upStream"><option value="B.Tech">B.Tech</option><option value="Degree">Degree</option><option value="MBA">MBA</option><option value="MCA">MCA</option><option value="Medical">Medical</option><option value="Other">Other</option></select></div>
+                <div class="input-group"><label>Year</label><select id="upYear"><option value="1">1st Year</option><option value="2">2nd Year</option><option value="3">3rd Year</option><option value="4">4th Year</option></select></div>
+                <div class="input-group"><label>Subject</label><input type="text" id="upSub" required placeholder="e.g. Anatomy"></div>
+                <div class="input-group"><label>Title</label><input type="text" id="upTitle" required placeholder="e.g. Chapter 1 Notes"></div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <div class="input-group"><label>Email (Optional)</label><input type="email" id="upContactEmail"></div>
+                    <div class="input-group"><label>Phone (Optional)</label><input type="tel" id="upContactPhone"></div>
+                </div>
+                <div class="input-group"><label>Link</label><input type="url" required placeholder="Google Drive Link"></div>
+                <button class="auth-btn">Submit Material</button>
+            </form>
+        </div>
+    </div>
 
-/**************** DATABASE (LOCAL FALLBACK) ****************/
-// ===== GitHub Gist Sync Config =====
-// 1. Create a PRIVATE Gist with a file named echovault.json
-// 2. Put initial content: {"users":{},"messages":[]}
-// 3. Create a GitHub Personal Access Token (scope: gist)
-// 4. Paste values below
-const GIST_ID = "PASTE_YOUR_GIST_ID_HERE";
-const GITHUB_TOKEN = "PASTE_YOUR_GITHUB_TOKEN_HERE";
+    <div class="modal" id="discussModal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('discussModal')">&times;</span>
+            <h2 id="discussTitle" style="margin-bottom:0.5rem;">Book Title</h2>
+            <p style="color:var(--text-muted); font-size:0.9rem;" id="discussAuthor">Author</p>
+            <div id="contactInfoSection" style="margin:1rem 0;"></div>
+            <div class="comment-box" style="margin-top:1rem; border-top:1px solid var(--glass-border); padding-top:1rem;">
+                <h4>Rate & Discuss</h4>
+                <div class="star-rating" id="starRating"><i class="far fa-star" onclick="rate(1)"></i><i class="far fa-star" onclick="rate(2)"></i><i class="far fa-star" onclick="rate(3)"></i><i class="far fa-star" onclick="rate(4)"></i><i class="far fa-star" onclick="rate(5)"></i></div>
+                <div class="input-group"><input type="text" id="commentInput" placeholder="Write a comment..."></div>
+                <button class="auth-btn" style="padding:0.6rem; margin-top:0;" onclick="postComment()">Post Comment</button>
+                <div id="commentsList" style="margin-top:1.5rem; max-height:200px; overflow-y:auto;"></div>
+            </div>
+        </div>
+    </div>
 
-let db = JSON.parse(localStorage.getItem('echovault-db') || '{"users":{},"messages":[]}');
-let currentUser = null;
+    <div class="modal" id="adminModal">
+        <div class="modal-content" style="max-width:900px;">
+            <span class="close" onclick="closeModal('adminModal')">&times;</span>
+            <h2>User Management</h2>
+            <div style="overflow-x:auto; margin-top:1rem;"><table style="width:100%; border-collapse:collapse; color:var(--text-main);"><thead><tr><th style="text-align:left; padding:10px; border-bottom:1px solid var(--glass-border);">Name</th><th style="text-align:left; padding:10px; border-bottom:1px solid var(--glass-border);">Email</th><th style="text-align:left; padding:10px; border-bottom:1px solid var(--glass-border);">Role</th><th style="text-align:left; padding:10px; border-bottom:1px solid var(--glass-border);">Joined</th></tr></thead><tbody id="userTableBody"></tbody></table></div>
+        </div>
+    </div>
 
-async function saveDB(){
-  localStorage.setItem('echovault-db', JSON.stringify(db));
-  if(!GIST_ID || !GITHUB_TOKEN || GIST_ID.includes('PASTE')) return;
-  try{
-    await fetch(`https://api.github.com/gists/${GIST_ID}`,{
-      method:'PATCH',
-      headers:{
-        'Authorization':`token ${GITHUB_TOKEN}`,
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        files:{ 'echovault.json':{ content: JSON.stringify(db,null,2) } }
-      })
-    });
-  }catch(e){ console.warn('Gist sync failed',e); }
-}
+    <script>
+        // CONFIG
+        const ADMIN_ID = "admin"; const ADMIN_PASS = "12345";
+        const defaultUsers = [{ name: "Dr. Faculty", email: "teacher@college.edu", pass: "teach123", role: "Teacher", joinedAt: "1/1/2026" }];
+        
+        let materials = [
+            { id: 1, title: "Data Structures", subject: "CS", stream: "B.Tech", year: "2", role: "Teacher", author: "Dr. Smith", isVerified: true, date: "2026-01-02", link: "#", contact: { email: "smith@cs.edu" }, comments: [{user:"John", text:"Great notes!", rating:5}] },
+            { id: 2, title: "Human Anatomy", subject: "Anatomy", stream: "Medical", year: "1", role: "Student", author: "R. Reddy", isVerified: false, date: "2025-12-20", link: "#", contact: { email: "reddy@med.edu" }, comments: [] },
+            { id: 3, title: "Fin. Accounting", subject: "Commerce", stream: "Degree", year: "3", role: "Teacher", author: "T. Reddy", isVerified: true, date: "2026-01-05", link: "#", contact: {}, comments: [] },
+            { id: 4, title: "Business Mgmt", subject: "MBA Core", stream: "MBA", year: "1", role: "Teacher", author: "Prof. Lee", isVerified: true, date: "2026-01-06", link: "#", contact: { phone: "999-888-777" }, comments: [] },
+            { id: 5, title: "Python Advanced", subject: "MCA", stream: "MCA", year: "2", role: "Student", author: "Alice", isVerified: false, date: "2026-01-01", link: "#", contact: {}, comments: [] }
+        ];
 
-async function loadDB(){
-  const local = localStorage.getItem('echovault-db');
-  if(local) db = JSON.parse(local);
-  if(!GIST_ID || !GITHUB_TOKEN || GIST_ID.includes('PASTE')) return;
-  try{
-    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`,{
-      headers:{ 'Authorization':`token ${GITHUB_TOKEN}` }
-    });
-    const gist = await res.json();
-    if(gist.files && gist.files['echovault.json']){
-      db = JSON.parse(gist.files['echovault.json'].content);
-      localStorage.setItem('echovault-db', JSON.stringify(db));
-    }
-  }catch(e){ console.warn('Gist load failed',e); }
-}
+        let savedIds = JSON.parse(localStorage.getItem('nexusSaved')) || [];
+        let currentUser = null; let isAdminMode = false; let currentBookId = null;
 
-// Auto-pull on load
-loadDB();
+        // AUTH
+        function toggleAdminMode() {
+            isAdminMode = !isAdminMode;
+            document.querySelector('.admin-toggle-btn').classList.toggle('active');
+            document.getElementById('loginSubtitle').innerText = isAdminMode ? "Admin System Access" : "Academic Resource Portal";
+            document.getElementById('loginSubmitBtn').innerText = isAdminMode ? "Login as Admin" : "Access Dashboard";
+            document.getElementById('authTabs').style.display = isAdminMode ? 'none' : 'flex';
+            document.getElementById('guestSection').style.display = isAdminMode ? 'none' : 'block';
+        }
 
-/**************** UTILITIES ****************/
-function uid(){ return 'EV-' + Math.random().toString(36).substr(2,6).toUpperCase(); }
-function hash(s){ return btoa(unescape(encodeURIComponent(s))); }
-function now(){ return Date.now(); }
+        function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPass').value;
+            if (isAdminMode) {
+                if (email === ADMIN_ID && pass === ADMIN_PASS) { currentUser = { name: "System Admin", role: "Admin", email: ADMIN_ID }; sessionStorage.setItem('nexusSession', JSON.stringify(currentUser)); showApp(); } 
+                else document.getElementById('loginError').style.display = 'block';
+                return;
+            }
+            const users = [...defaultUsers, ...(JSON.parse(localStorage.getItem('nexusUsers')) || [])];
+            const user = users.find(u => u.email === email && u.pass === pass);
+            if(user) { currentUser = user; sessionStorage.setItem('nexusSession', JSON.stringify(user)); showApp(); } else document.getElementById('loginError').style.display = 'block';
+        }
+        
+        function loginAsGuest() { currentUser = { name: "Guest", role: "Guest" }; sessionStorage.setItem('nexusSession', JSON.stringify(currentUser)); showApp(); }
+        function handleRegister(e) { e.preventDefault(); const newUser = { name: document.getElementById('regName').value, email: document.getElementById('regEmail').value, pass: document.getElementById('regPass').value, role: document.getElementById('regRole').value, joinedAt: new Date().toLocaleDateString() }; const users = JSON.parse(localStorage.getItem('nexusUsers')) || []; users.push(newUser); localStorage.setItem('nexusUsers', JSON.stringify(users)); currentUser = newUser; sessionStorage.setItem('nexusSession', JSON.stringify(newUser)); showApp(); }
 
-/**************** RULE ENGINE ****************/
-function enforceRules(){
-  const t = now();
-  for(const id in db.users){
-    if(t - db.users[id].lastActive > 7*DAY){
-      delete db.users[id];
-      db.messages = db.messages.filter(m => m.from !== id && m.to !== id);
-    }
-  }
-  db.messages = db.messages.filter(m => t - m.time < DAY);
-  saveDB();
-}
+        // APP LOGIC
+        function showApp() {
+            document.getElementById('auth-section').style.display = 'none'; document.getElementById('app-section').style.display = 'flex';
+            document.getElementById('displayUserName').innerText = currentUser.name;
+            document.getElementById('adminBtn').style.display = currentUser.role === 'Admin' ? 'flex' : 'none';
+            if(currentUser.role === 'Guest') { document.getElementById('uploadBtn').style.display='none'; document.getElementById('libBtn').style.display='none'; }
+            renderMaterials();
+        }
 
-/**************** AUTH ****************/
-function showSignup(){ login.classList.add('hidden'); signup.classList.remove('hidden'); }
-function backToLogin(){ signup.classList.add('hidden'); login.classList.remove('hidden'); }
+        function initTheme() {
+            const savedTheme = localStorage.getItem('nexusTheme');
+            if(savedTheme === 'light') { document.body.setAttribute('data-theme', 'light'); document.getElementById('themeIcon').className = 'fas fa-moon'; }
+            else { document.body.removeAttribute('data-theme'); document.getElementById('themeIcon').className = 'fas fa-sun'; }
+        }
 
-function registerUser(){
-  const u = regUser.value.trim();
-  const p = regPass.value;
-  if(!u || !p) return alert('Username and password required');
-  for(const id in db.users){ if(db.users[id].username === u) return alert('Username exists'); }
-  const id = uid();
-  db.users[id] = { userId:id, username:u, pass:hash(p), profile:null, reports:0, lastActive:now() };
-  saveDB(); alert('Vault created. Login again.'); backToLogin();
-}
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.querySelector('.theme-btn');
+            btn.classList.add('spin'); setTimeout(() => btn.classList.remove('spin'), 800);
+            if (body.hasAttribute('data-theme')) { body.removeAttribute('data-theme'); localStorage.setItem('nexusTheme', 'dark'); document.getElementById('themeIcon').className = 'fas fa-sun'; } 
+            else { body.setAttribute('data-theme', 'light'); localStorage.setItem('nexusTheme', 'light'); document.getElementById('themeIcon').className = 'fas fa-moon'; }
+        }
 
-function loginUser(){
-  enforceRules();
-  const u = logUser.value.trim();
-  const p = hash(logPass.value);
-  for(const id in db.users){
-    const x = db.users[id];
-    if((x.username === u || x.userId === u) && x.pass === p){
-      currentUser = id; x.lastActive = now(); saveDB();
-      login.classList.add('hidden');
-      x.profile ? openChat() : profile.classList.remove('hidden');
-      return;
-    }
-  }
-  alert('Access denied');
-}
+        function renderMaterials() {
+            const role = document.getElementById('roleFilter').value;
+            const stream = document.getElementById('streamFilter').value;
+            const year = document.getElementById('yearFilter').value;
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = materials.filter(item => {
+                return (role === 'all' || item.role === role) && (stream === 'all' || item.stream === stream) && (year === 'all' || item.year == year) &&
+                       (item.title.toLowerCase().includes(term) || item.subject.toLowerCase().includes(term) || item.author.toLowerCase().includes(term));
+            });
 
-function logout(){ location.reload(); }
+            const grid = document.getElementById('grid'); grid.innerHTML = '';
+            if(filtered.length === 0) { grid.innerHTML = '<p style="color:var(--text-muted); text-align:center; grid-column:1/-1;">No books found.</p>'; return; }
 
-/**************** PROFILE ****************/
-function saveProfile(){
-  db.users[currentUser].profile = {
-    name:pname.value, age:page.value, gender:pgender.value,
-    location:plocation.value, bio:pbio.value, photo:pphoto.value
-  };
-  db.users[currentUser].lastActive = now(); saveDB();
-  profile.classList.add('hidden'); openChat();
-}
+            filtered.forEach((item, index) => {
+                const isSaved = savedIds.includes(item.id);
+                const isNew = (new Date() - new Date(item.date)) / (1000 * 60 * 60 * 24) <= 7;
+                const adminBtn = currentUser.role === 'Admin' ? `<div class="admin-delete-btn" onclick="deleteBook(${item.id})" title="Delete Book"><i class="fas fa-trash"></i></div>` : '';
 
-/**************** CHAT ****************/
-function openChat(){
-  chat.classList.remove('hidden');
-  welcome.innerText = 'Welcome ' + (db.users[currentUser].profile?.name || db.users[currentUser].username);
-  renderChat();
-}
+                const card = document.createElement('div'); card.className = 'card'; card.style.animationDelay = `${index * 0.05}s`;
+                card.innerHTML = `
+                    ${adminBtn}
+                    <div class="card-header"><div>${isNew ? '<span class="new-badge">NEW</span> ' : ''}${item.isVerified ? '<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>' : ''}</div>${currentUser.role !== 'Guest' ? `<button class="save-btn ${isSaved?'active':''}" onclick="toggleSave(${item.id})"><i class="${isSaved?'fas':'far'} fa-heart"></i></button>` : ''}</div>
+                    <div class="tag-row"><span class="tag">${item.stream}</span><span class="tag">${item.year} Year</span><span class="tag">${item.role}</span></div>
+                    <h3>${item.title}</h3>
+                    <div class="meta"><span><i class="fas fa-book-open"></i> ${item.subject}</span><span><i class="fas fa-user-circle"></i> ${item.author}</span></div>
+                    <div class="action-row"><a href="${item.link}" target="_blank" class="download-btn">Download</a><div class="discuss-btn" onclick="openDiscuss(${item.id})"><i class="far fa-comments"></i></div></div>
+                `;
+                grid.appendChild(card);
+            });
+        }
 
-function sendMessage(burn){
-  const to = search.value.trim();
-  const text = message.value.trim();
-  if(!db.users[to] || !text) return alert('Invalid User ID or message');
-  db.messages.push({ id:uid(), from:currentUser, to, text, time:now(), burn, viewed:false, reactions:[] });
-  db.users[currentUser].lastActive = now(); message.value=''; saveDB(); renderChat();
-}
+        function deleteBook(id) { if(confirm("Admin: Delete this book?")) { materials = materials.filter(m => m.id !== id); renderMaterials(); } }
+        function openDiscuss(id) {
+            currentBookId = id; const item = materials.find(m => m.id === id);
+            document.getElementById('discussTitle').innerText = item.title; document.getElementById('discussAuthor').innerText = "By " + item.author;
+            const contactSec = document.getElementById('contactInfoSection'); contactSec.innerHTML = '';
+            if(item.contact && (item.contact.email || item.contact.phone)) {
+                contactSec.style.display = 'block';
+                if(item.contact.email) contactSec.innerHTML += `<div class="contact-row"><i class="fas fa-envelope"></i> ${item.contact.email}</div>`;
+                if(item.contact.phone) contactSec.innerHTML += `<div class="contact-row"><i class="fas fa-phone"></i> ${item.contact.phone}</div>`;
+            } else contactSec.style.display = 'none';
+            renderComments(item); openModal('discussModal');
+        }
 
-function renderChat(){
-  enforceRules(); chatBox.innerHTML='';
-  db.messages.forEach(m=>{
-    if(m.from!==currentUser && m.to!==currentUser) return;
-    if(m.burn && m.viewed) return;
-    const d=document.createElement('div'); d.className='msg '+(m.from===currentUser?'me':'');
-    const hrs=Math.ceil((DAY-(now()-m.time))/3600000);
-    d.innerHTML=`${m.text}<div class='meta'>${m.burn?'🔥 burn':'⏳ expires'} • ${hrs}h</div>`;
-    if(m.burn && !m.viewed) d.onclick=()=>{m.viewed=true;saveDB();renderChat();};
-    chatBox.appendChild(d);
-  });
-  chatBox.scrollTop=chatBox.scrollHeight;
-}
-</script>
+        function renderComments(item) {
+            const list = document.getElementById('commentsList'); list.innerHTML = '';
+            if(!item.comments || item.comments.length === 0) { list.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem;">No comments yet.</p>'; return; }
+            item.comments.forEach(c => list.innerHTML += `<div class="comment-item"><strong>${c.user}</strong> <span style="color:#f59e0b; float:right">★ ${c.rating}</span><br>${c.text}</div>`);
+        }
+
+        let currentRating = 0;
+        function rate(n) { currentRating = n; const stars = document.querySelectorAll('.star-rating i'); stars.forEach((s,i) => s.className = i < n ? 'fas fa-star' : 'far fa-star'); }
+
+        function postComment() {
+            const text = document.getElementById('commentInput').value; if(!text) return;
+            const item = materials.find(m => m.id === currentBookId); if(!item.comments) item.comments = [];
+            item.comments.unshift({ user: currentUser.name, text: text, rating: currentRating || 5 });
+            document.getElementById('commentInput').value = ''; renderComments(item);
+        }
+
+        function handleUpload(e) {
+            e.preventDefault();
+            const newItem = {
+                id: Date.now(), title: document.getElementById('upTitle').value, subject: document.getElementById('upSub').value,
+                stream: document.getElementById('upStream').value, year: document.getElementById('upYear').value, 
+                role: currentUser.role, author: currentUser.name, isVerified: false,
+                date: new Date().toISOString(), link: "#", contact: { email: document.getElementById('upContactEmail').value, phone: document.getElementById('upContactPhone').value }, comments: []
+            };
+            materials.unshift(newItem); renderMaterials(); closeModal('uploadModal');
+        }
+
+        window.filterMaterials = renderMaterials;
+        function switchTab(t) { document.querySelectorAll('.auth-tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.auth-form').forEach(x=>x.classList.remove('active')); if(t==='login'){document.querySelectorAll('.auth-tab')[0].classList.add('active');document.getElementById('loginForm').classList.add('active');} else{document.querySelectorAll('.auth-tab')[1].classList.add('active');document.getElementById('registerForm').classList.add('active');} }
+        function toggleSave(id) { if(savedIds.includes(id)) savedIds=savedIds.filter(x=>x!==id); else savedIds.push(id); localStorage.setItem('nexusSaved', JSON.stringify(savedIds)); renderMaterials(); }
+        function showLibrary() { renderMaterials(); }
+        function logout() { sessionStorage.removeItem('nexusSession'); location.reload(); }
+        function openModal(id) { document.getElementById(id).style.display='flex'; }
+        function closeModal(id) { document.getElementById(id).style.display='none'; }
+        function openAdminPanel() { const tbody = document.getElementById('userTableBody'); tbody.innerHTML=''; [...defaultUsers, ...(JSON.parse(localStorage.getItem('nexusUsers'))||[])].forEach(u=>tbody.innerHTML+=`<tr><td style="padding:10px; border-bottom:1px solid var(--glass-border)">${u.name}</td><td style="padding:10px; border-bottom:1px solid var(--glass-border)">${u.email}</td><td style="padding:10px; border-bottom:1px solid var(--glass-border)">${u.role}</td><td style="padding:10px; border-bottom:1px solid var(--glass-border)">${u.joinedAt || '-'}</td></tr>`); openModal('adminModal'); }
+        function resetFilters() { document.getElementById('searchInput').value=''; document.getElementById('roleFilter').value='all'; document.getElementById('streamFilter').value='all'; document.getElementById('yearFilter').value='all'; renderMaterials(); }
+
+        initTheme();
+        if(sessionStorage.getItem('nexusSession')) { currentUser = JSON.parse(sessionStorage.getItem('nexusSession')); showApp(); }
+    </script>
 </body>
 </html>
